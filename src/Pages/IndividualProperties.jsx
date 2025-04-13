@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -44,8 +44,7 @@ function IndividualProperties() {
   };
 
   // Back-end Integration Code
-  async function fetchData() {
-    // const id = 9;
+  const fetchData = useCallback(async () => {
     try {
       const result = await GetSpecificPropertyId(id); // Backend Integration
       if (result.status === 200) {
@@ -60,19 +59,24 @@ function IndividualProperties() {
       toast.error("Error fetching property data");
       return null;
     }
-  }
+  }, [id]);
 
-  const fetchImage = async () => {
-    // const id = 9;
-    const result = await getPropertyImages(id); // Backend Integration
-    if (result.status === 200) {
-      const data = result.data;
-      return data;
-    } else {
-      toast.warning("No Such Property Images Found");
+  const fetchImage = useCallback(async () => {
+    try {
+      const result = await getPropertyImages(id); // Backend Integration
+      if (result.status === 200) {
+        const data = result.data;
+        return data;
+      } else {
+        toast.warning("No Such Property Images Found");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error fetching property images:", error);
+      toast.error("Error fetching property images");
       return null;
     }
-  };
+  }, [id]);
 
   const WishlistAdd = async (propId) => {
     // const id = 9;
@@ -126,7 +130,7 @@ function IndividualProperties() {
         setImages(img);
       });
     });
-  }, []);
+  }, [fetchData, fetchImage]);
   // - End Backend Integreation Code
   return (
     <div>
@@ -144,8 +148,9 @@ function IndividualProperties() {
                 <div>
                   <center>
                     <img
-                      src={"data:image/png;base64," + `${image.imageData}`}
+                     src={`data:image/png;base64,${image.imageData}`}
                       className="CarouselImage"
+                      alt="Property"
                     />
                   </center>
                 </div>

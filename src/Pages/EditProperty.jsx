@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import {
   addPropertyImages,
@@ -12,7 +12,7 @@ import TagInput from "../Components/TagHandling";
 
 function EditProperty() {
   const pathname = window.location.pathname;
-  const propid = pathname.split("/").pop();
+  const propId = pathname.split("/").pop(); // Fixed variable name to camelCase
   const [TagList, setTagList] = useState([]);
   const [Title, setTitle] = useState("");
   const [Descpt, setDescpt] = useState("");
@@ -27,27 +27,22 @@ function EditProperty() {
   const [Bedroom, setBedroom] = useState("");
   const [Bathroom, setBathroom] = useState("");
   const [Price, setPrice] = useState("");
-  // const [Images, setImages] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [Images, setImages] = useState([]);
   const [ImgChk, setImgChk] = useState([]);
   var images = [];
   const navigate = useNavigate();
+  console.log("Selected Tags", selectedTags);
+
   const handleTagsChange = (tags) => {
-    // const newTags = selectedTags;
     const newTags = new Set(tags);
-    // tags.map((e) => {
-    //   newTags.add(e);
-    // });
-    tags.forEach(tag => {
-      newTags.add(tag)
+    tags.forEach((tag) => {
+      newTags.add(tag);
     });
     setTagList([...newTags]);
     setSelectedTags([...newTags]);
   };
-  console.log(selectedTags)
 
-  //Send to Backend to Get the Available Tags
   const availableTags = [
     "1BHK",
     "2BHK",
@@ -57,9 +52,9 @@ function EditProperty() {
     "Hill-Side",
   ];
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const result = await GetSpecificPropertyId(propid); // Backend Integration
+      const result = await GetSpecificPropertyId(propId); // Updated variable name
       if (result.status === 200) {
         const data = result.data;
         return data;
@@ -71,7 +66,8 @@ function EditProperty() {
       toast.error("Error fetching property data");
       return null;
     }
-  };
+  }, [propId]);
+
   const editProp = async () => {
     const tagsDTORequest = TagList.map((tag) => ({
       tagName: tag,
@@ -125,15 +121,14 @@ function EditProperty() {
         },
         tags: tagsDTORequest,
       };
-      Image = [];
+      let Image = [];
       const files = document.getElementById("formFileMultiple");
       for (let i = 0; i < files.files.length; i++) {
         Image.push(files.files[i]);
       }
-      const result = await EditSpecificPropertyId(propertyRequest, propid);
-      // const result = await EditSpecficPropertyId(id, Title, Address, City, State, District, Pincode, Type, Price, Area, Bedroom, Bathroom, Descpt)
+      const result = await EditSpecificPropertyId(propertyRequest, propId); // Updated variable name
       if (result.message === "Update Done") {
-         await addPropertyImages(Image, propid);
+        await addPropertyImages(Image, propId); // Updated variable name
         toast.success(result.message + " Successfully");
         navigate("/dashboard");
       } else {
@@ -141,9 +136,9 @@ function EditProperty() {
       }
     }
   };
-  const fetchImage = async () => {
-    // const id = 9;
-    const result = await getPropertyImages(propid); // Backend Integration
+
+  const fetchImage = useCallback(async () => {
+    const result = await getPropertyImages(propId); // Updated variable name
     if (result.status === 200) {
       const data = result.data;
       return data;
@@ -151,11 +146,11 @@ function EditProperty() {
       toast.warning("No Such Property Images Found");
       return null;
     }
-  };
+  }, [propId]);
 
   const deleteImage = async (id) => {
     if (window.confirm("Are you Sure you want to Delete User")) {
-      const result = await DeletePropertyImage(id); // Backend Integration
+      const result = await DeletePropertyImage(id);
       if (result.status === 200) {
         images = await fetchImage();
         setImages(images);
@@ -190,7 +185,7 @@ function EditProperty() {
         setState(address.state);
         setDistrict(address.district);
         setPincode(address.pincode);
-        const tagsArray = tags.map((tag) => tag.tagName); // Update the state asynchronously
+        const tagsArray = tags.map((tag) => tag.tagName);
         setSelectedTags(tagsArray);
         setType(propertyType);
         setPrice(price);
@@ -204,7 +199,7 @@ function EditProperty() {
         setImages(images);
       });
     })();
-  }, []);
+  }, [fetchData, fetchImage]);
   return (
     <div>
       <div className="container">
